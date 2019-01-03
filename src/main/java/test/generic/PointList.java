@@ -15,5 +15,5 @@ public class PointList<T> {
 	
 	private ArrayList<Point<T>> arrayList = new ArrayList<Point<T>>(); 
 
-	
+
 }

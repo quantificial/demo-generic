@@ -3,6 +3,7 @@ package test.demogeneric;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.function.IntBinaryOperator;
@@ -10,6 +11,7 @@ import java.util.function.IntBinaryOperator;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.util.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
 import test.generic.GenericFoo;
@@ -17,6 +19,11 @@ import test.generic.GenericList;
 import test.generic.Hey;
 import test.generic.Point;
 import test.generic.Wrapper;
+import test.generic.func.EmptyInput;
+import test.generic.func.Finder;
+import test.generic.func.Information;
+
+import com.google.common.base.Preconditions;
 
 @SpringBootApplication
 @Slf4j
@@ -82,18 +89,75 @@ public class DemoGenericApplication implements CommandLineRunner  {
 		
 		//pointList.stream().forEach(Point::showMessage);
 		
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		// testing function
+		
 		Function<Point, String> showMessage = Point::showMessage;		
 		showMessage.apply(x);
 		
 		Function<Integer, Integer> identity = Point::identity;
 		//Integer result = identity.apply(new Integer(100));
+						
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		// Lambda expression is stateless
+		Information information = input -> input;		
+		log.info(information.showDetails("hello"));
 		
-		log.info("<<< application end");
+		Information info2 = new Information( ) {
+			// anonymous class is stateful and it could be used to keep
+			private int callCount = 0;
+			@Override
+			public String showDetails(String detailLevel) {
+				callCount++;
+				return String.format("Detail Level [%s], Call Count [%s]", detailLevel, callCount);
+			}			
+		};
+		
+		log.info(info2.showDetails("hello 2"));
+		log.info(info2.showDetails("hello 3"));
+		log.info(info2.showDetails("hello 4"));
+		
+		EmptyInput emptyInput = () -> { return 10; };
+		
+		log.info("empty input: " + emptyInput.getRandom());
+		
+		// simpify
+		
+		Information sInfo1 = (z) -> (StringUtils.capitalize(z));
+		log.info("sInfo1: " + sInfo1.showDetails("test sInfo1"));
+		
+		Information sInfo2 = StringUtils::capitalize;
+		log.info("sInfo2: " + sInfo1.showDetails("test sInfo2"));
 		
 		
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		// Method Reference
+				
+		Finder finder = DemoGenericApplication::doFind;
+		log.info(""+finder.find("this is a testing", "is"));
+		
+		// parameter method reference, try to match the method of the first parameter
+		Finder finder2 = String::lastIndexOf;
+		log.info(""+finder.find("this is a testing", "is"));
+		
+		///////////////////////////////////////////////////////////////////////////////////////////////////
+		// Guava
+
+		Optional<Integer> oi = Optional.ofNullable(null);		
+		Preconditions.checkNotNull(null);
+		
+		
+		
+		
+		
+		log.info("<<< application end");				
 		System.exit(0);
 		
 	}
+	
+    public static int doFind(String s1, String s2){
+        return s1.lastIndexOf(s2);
+    }	
 
 }
 
